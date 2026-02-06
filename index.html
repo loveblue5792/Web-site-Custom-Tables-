@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>create tables</title>
+<p></p>
+<link rel="stylesheet" href="styles.css">
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById("registration").onclick = function () {
+            window.location.href = "entrance.html";
+        };
+        
+        document.getElementById("changeSizeBtn").onclick = function() {
+            const width = document.getElementById('widthInput').value;
+            const height = document.getElementById('heightInput').value;
+            const image = document.getElementById('resizableImage');
+            
+            if (width && height) {
+                image.style.width = width + 'px';
+                image.style.height = height + 'px';
+                console.log("Размер изменен на: " + width + "x" + height);
+            }
+        };
+        
+        document.getElementById("saveButton").onclick = function() {
+            const width = document.getElementById('widthInput').value;
+            const height = document.getElementById('heightInput').value;
+            alert("Дизайн сохранен!\nРазмер: " + width + "x" + height + "px");
+        };
+        
+        const width = document.getElementById('widthInput').value;
+        const height = document.getElementById('heightInput').value;
+        const image = document.getElementById('resizableImage');
+        image.style.width = width + 'px';
+        image.style.height = height + 'px';
+        
+
+        const imageContainer = document.getElementById('mainImage');
+        const mainImage = document.getElementById('resizableImage');
+        
+        
+        const dropZone = document.createElement('div');
+        dropZone.id = 'dropZone';
+        dropZone.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 70%;
+            border: 2px dashed #ff6b6b;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 10;
+            box-sizing: border-box;
+        `;
+        
+ 
+        const dropZoneLabel = document.createElement('div');
+        dropZoneLabel.textContent = 'Перетаскивайте сюда картинки';
+        dropZoneLabel.style.cssText = `
+            position: absolute;
+            top: -25px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 14px;
+            font-weight: bold;
+        `;
+        dropZone.appendChild(dropZoneLabel);
+        imageContainer.appendChild(dropZone);
+        
+  
+        const dragContainer = document.createElement('div');
+        dragContainer.id = 'dragContainer';
+        dragContainer.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        `;
+        imageContainer.appendChild(dragContainer);
+        
+
+        const draggableItems = document.querySelectorAll('.draggable-item');
+        
+    
+        const draggableImages = [];
+        
+    
+        let dragCounter = 0;
+        
+
+        function createDraggableImage(src) {
+            const imgId = 'draggable-img-' + dragCounter++;
+            const img = document.createElement('img');
+            img.id = imgId;
+            img.src = src; 
+            img.alt = 'Перетаскиваемое изображение';
+            img.style.cssText = `
+                position: absolute;
+                width: 100px;
+                height: auto;
+                cursor: move;
+                z-index: 20;
+                user-select: none;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            `;
+            
+
+            const dropZoneRect = dropZone.getBoundingClientRect();
+            const containerRect = dragContainer.getBoundingClientRect();
+            
+            img.style.left = (dropZoneRect.left - containerRect.left + dropZoneRect.width/2 - 50) + 'px';
+            img.style.top = (dropZoneRect.top - containerRect.top + dropZoneRect.height/2 - 50) + 'px';
+            
+
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            
+            img.addEventListener('mousedown', startDrag);
+            img.addEventListener('touchstart', startDragTouch);
+            
+            function startDrag(e) {
+                e.preventDefault();
+                isDragging = true;
+                
+                initialX = e.clientX - img.offsetLeft;
+                initialY = e.clientY - img.offsetTop;
+                
+                document.addEventListener('mousemove', drag);
+                document.addEventListener('mouseup', stopDrag);
+                
+                img.style.zIndex = '100'; 
+            }
+            
+            function startDragTouch(e) {
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    
+                    const touch = e.touches[0];
+                    initialX = touch.clientX - img.offsetLeft;
+                    initialY = touch.clientY - img.offsetTop;
+                    
+                    document.addEventListener('touchmove', dragTouch);
+                    document.addEventListener('touchend', stopDragTouch);
+                    
+                    img.style.zIndex = '100';
+                }
+            }
+            
+            function drag(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    
+
+                    const dropZoneRect = dropZone.getBoundingClientRect();
+                    const containerRect = dragContainer.getBoundingClientRect();
+                    
+                    const minX = dropZoneRect.left - containerRect.left;
+                    const maxX = dropZoneRect.right - containerRect.left - img.offsetWidth;
+                    const minY = dropZoneRect.top - containerRect.top;
+                    const maxY = dropZoneRect.bottom - containerRect.top - img.offsetHeight;
+                    
+
+                    currentX = Math.max(minX, Math.min(maxX, currentX));
+                    currentY = Math.max(minY, Math.min(maxY, currentY));
+                    
+                    img.style.left = currentX + 'px';
+                    img.style.top = currentY + 'px';
+                }
+            }
+            
+            function dragTouch(e) {
+                if (isDragging && e.touches.length === 1) {
+                    e.preventDefault();
+                    
+                    const touch = e.touches[0];
+                    currentX = touch.clientX - initialX;
+                    currentY = touch.clientY - initialY;
+                    
+ 
+                    const dropZoneRect = dropZone.getBoundingClientRect();
+                    const containerRect = dragContainer.getBoundingClientRect();
+                    
+                    const minX = dropZoneRect.left - containerRect.left;
+                    const maxX = dropZoneRect.right - containerRect.left - img.offsetWidth;
+                    const minY = dropZoneRect.top - containerRect.top;
+                    const maxY = dropZoneRect.bottom - containerRect.top - img.offsetHeight;
+                    
+
+                    currentX = Math.max(minX, Math.min(maxX, currentX));
+                    currentY = Math.max(minY, Math.min(maxY, currentY));
+                    
+                    img.style.left = currentX + 'px';
+                    img.style.top = currentY + 'px';
+                }
+            }
+            
+            function stopDrag() {
+                isDragging = false;
+                img.style.zIndex = '20';
+                document.removeEventListener('mousemove', drag);
+                document.removeEventListener('mouseup', stopDrag);
+            }
+            
+            function stopDragTouch() {
+                isDragging = false;
+                img.style.zIndex = '20';
+                document.removeEventListener('touchmove', dragTouch);
+                document.removeEventListener('touchend', stopDragTouch);
+            }
+            
+
+            dragContainer.appendChild(img);
+            draggableImages.push(img);
+            
+            return img;
+        }
+        
+        draggableItems.forEach(item => {
+            item.addEventListener('click', function() {
+
+                const type = this.getAttribute('data-type');
+                const src = this.getAttribute('data-src');
+                const text = this.getAttribute('data-text');
+                
+                if (type === 'sticker' || type === 'frame') {
+
+                    const img = createDraggableImage(src);
+                    
+
+                    if (type === 'frame') {
+                        img.style.width = '150px';
+                        img.style.border = '3px solid #4ecdc4';
+                    }
+                } else if (type === 'text') {
+
+                    const textElement = document.createElement('div');
+                    textElement.textContent = text || 'Ваш текст';
+
+
+                    const dropZoneRect = dropZone.getBoundingClientRect();
+                    const containerRect = dragContainer.getBoundingClientRect();
+                    
+                    textElement.style.left = (dropZoneRect.left - containerRect.left + dropZoneRect.width/2 - 50) + 'px';
+                    textElement.style.top = (dropZoneRect.top - containerRect.top + dropZoneRect.height/2 - 25) + 'px';
+                    
+
+                    let isDragging = false;
+                    let currentX;
+                    let currentY;
+                    let initialX;
+                    let initialY;
+                    
+                    textElement.addEventListener('mousedown', startDrag);
+                    textElement.addEventListener('touchstart', startDragTouch);
+                    
+                    function startDrag(e) {
+                        e.preventDefault();
+                        isDragging = true;
+                        
+                        initialX = e.clientX - textElement.offsetLeft;
+                        initialY = e.clientY - textElement.offsetTop;
+                        
+                        document.addEventListener('mousemove', drag);
+                        document.addEventListener('mouseup', stopDrag);
+                        
+                        textElement.style.zIndex = '100';
+                    }
+                    
+                    function startDragTouch(e) {
+                        e.preventDefault();
+                        if (e.touches.length === 1) {
+                            isDragging = true;
+                            
+                            const touch = e.touches[0];
+                            initialX = touch.clientX - textElement.offsetLeft;
+                            initialY = touch.clientY - textElement.offsetTop;
+                            
+                            document.addEventListener('touchmove', dragTouch);
+                            document.addEventListener('touchend', stopDragTouch);
+                            
+                            textElement.style.zIndex = '100';
+                        }
+                    }
+                    
+                    function drag(e) {
+                        if (isDragging) {
+                            e.preventDefault();
+                            
+                            currentX = e.clientX - initialX;
+                            currentY = e.clientY - initialY;
+                            
+                            const dropZoneRect = dropZone.getBoundingClientRect();
+                            const containerRect = dragContainer.getBoundingClientRect();
+                            
+                            const minX = dropZoneRect.left - containerRect.left;
+                            const maxX = dropZoneRect.right - containerRect.left - textElement.offsetWidth;
+                            const minY = dropZoneRect.top - containerRect.top;
+                            const maxY = dropZoneRect.bottom - containerRect.top - textElement.offsetHeight;
+                            
+                            currentX = Math.max(minX, Math.min(maxX, currentX));
+                            currentY = Math.max(minY, Math.min(maxY, currentY));
+                            
+                            textElement.style.left = currentX + 'px';
+                            textElement.style.top = currentY + 'px';
+                        }
+                    }
+                    
+                    function dragTouch(e) {
+                        if (isDragging && e.touches.length === 1) {
+                            e.preventDefault();
+                            
+                            const touch = e.touches[0];
+                            currentX = touch.clientX - initialX;
+                            currentY = touch.clientY - initialY;
+                            
+                            const dropZoneRect = dropZone.getBoundingClientRect();
+                            const containerRect = dragContainer.getBoundingClientRect();
+                            
+                            const minX = dropZoneRect.left - containerRect.left;
+                            const maxX = dropZoneRect.right - containerRect.left - textElement.offsetWidth;
+                            const minY = dropZoneRect.top - containerRect.top;
+                            const maxY = dropZoneRect.bottom - containerRect.top - textElement.offsetHeight;
+                            
+
+                            currentX = Math.max(minX, Math.min(maxX, currentX));
+                            currentY = Math.max(minY, Math.min(maxY, currentY));
+                            
+                            textElement.style.left = currentX + 'px';
+                            textElement.style.top = currentY + 'px';
+                        }
+                    }
+                    
+                    function stopDrag() {
+                        isDragging = false;
+                        textElement.style.zIndex = '20';
+                        document.removeEventListener('mousemove', drag);
+                        document.removeEventListener('mouseup', stopDrag);
+                    }
+                    
+                    function stopDragTouch() {
+                        isDragging = false;
+                        textElement.style.zIndex = '20';
+                        document.removeEventListener('touchmove', dragTouch);
+                        document.removeEventListener('touchend', stopDragTouch);
+                    }
+                    
+                    dragContainer.appendChild(textElement);
+                    draggableImages.push(textElement);
+                }
+            });
+        });
+        
+
+        const style = document.createElement('style');
+        style.textContent = `
+            .draggable-item {
+                cursor: pointer;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            
+            .draggable-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+            
+            .item-image {
+                width: 50px;
+                height: 50px;
+                background-color: #f0f0f0;
+                border-radius: 4px;
+                margin-bottom: 5px;
+            }
+            
+            .item-label {
+                font-weight: bold;
+                margin-bottom: 3px;
+            }
+            
+            .item-description {
+                font-size: 12px;
+                color: #666;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+</head>
+<body>
+    <p></p>
+<table>
+    <tr>
+        <td>
+            <b><h1> Сайт</h1></b>
+        </td>
+        <td></td>
+        <td>
+            <button id="registration" class="profilebutton" type="button">
+                Войти в профиль
+            </button>
+        </td>
+    </tr>
+</table>
+
+<h1>кастом столов</h1>
+
+<p> Что вас ждет на нашем сайте?<br>
+Добро пожаловать в уникальную мастерскую по созданию идеальной мебели! Наш сайт — это не просто каталог, а полноценный цифровой конструктор столов, где вы становитесь дизайнером собственной мебели<br>
+
+Возможности, которые вас удивят:
+<br><br>
+Конструктор в реальном времени
+<br><br>
+Меняйте размеры стола прямо на экране<br><br>
+Перетаскивайте декоративные элементы<br><br>
+
+Создавайте уникальные комбинации за минуты<br><br><br>
+
+Персонализация без границ<br>
+
+Выбирайте из множества стикеров, рамок и узоров<br>
+
+Экспериментируйте с текстурами и цветами<br>
+
+Сохраняйте самые удачные дизайны<br><br><br>
+ Точность до пикселя<br>
+Задавайте точные размеры в пикселях<br>
+Контролируйте каждый элемент дизайна<br>
+олучайте визуализацию будущего стола<br><br><br>
+
+ Чем полезен наш сайт?<br>
+Для дома:<br>
+ Визуализируйте мебель до покупки<br>
+ Подберите идеальный размер под ваше пространство<br>
+ Создайте уникальный дизайн, которого нет в магазинах<br><br><br>
+
+Для бизнеса:<br>
+ Прототипируйте мебель для кафе и ресторанов<br>
+ Презентуйте клиентам будущие проекты<br>
+ Экономьте на дизайнерских услугах<br><br><br>
+
+Для творчества:<br>
+ Реализуйте самые смелые идеи<br>
+ Экспериментируйте без ограничений<br>
+ Развивайте дизайнерские навыки<br><br><br>
+
+ Как это работает?<br>
+Загружаете базовое изображение стола<br>
+Выбираете элементы из панели справа<br>
+Перетаскиваете их на стол<br>
+Настраиваете размеры под свои нужды<br>
+Сохраняете готовый дизайн<br><br><br>
+
+Почему именно наш конструктор?<br>
+ Простота — не нужно быть дизайнером, чтобы создавать шедевры<br>
+ Скорость — от идеи до визуализации за 5 минут<br>
+Сохранение — все проекты остаются с вами<br>
+ Доступность — работает прямо в браузере<br><br><br>
+
+Кому подойдет?<br>
+Домовладельцам, ищущим уникальную мебель<br>
+Дизайнерам интерьеров для работы с клиентами<br>
+Владельцам кафе/ресторанов для создания авторской мебели<br>
+Ремесленникам для проектирования будущих изделий<br>
+Студентам дизайнерских специальностей<br>
+Всем, кто любит творить и создавать!<br><br>
+<br>
+
+Что впереди?<br>
+Мы постоянно добавляем новые функции:<br>
+Больше элементов декора<br>
+Режим 3D-просмотра<br>
+Сохранение в разных форматах<br>
+Печать чертежей</p>
+
+<div class="container">
+    <div class="main-content">
+        <div class="image-container" id="mainImage">
+            <img src="desk1.png" alt="Основное изображение" class="main-image" id="resizableImage">
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel-title">Элементы для перетаскивания</div>
+            <div class="draggable-items">
+                <div class="draggable-item" data-type="sticker" data-src="rendered_notebook.png">
+                    <img src="rendered_notebook.png" alt="" class="item-image">
+                    <div class="item-label"></div>
+                    <div class="item-description">Перетащите на изображение</div>
+                </div>
+                
+                <div class="draggable-item" data-type="sticker" data-src="book.png">
+                    <img src="book.png" alt="" class="item-image">
+                    <div class="item-label"></div>
+                    <div class="item-description">Перетащите на изображение</div>
+                </div>
+                
+                <div class="draggable-item" data-type="sticker" data-src="">
+                    <img src="" alt="" class="item-image">
+                    <div class="item-label"></div>
+                    <div class="item-description">в разработке</div>
+                </div>
+                
+                <div class="draggable-item" data-type="sticker" data-src="">
+                    <img src="" alt="" class="item-image">
+                    <div class="item-label"></div>
+                    <div class="item-description">в разработке</div>
+                </div>
+                
+                <div class="draggable-item" data-type="frame" data-src="">
+                    <img src="" alt="" class="item-image">
+                    <div class="item-label"></div>
+                    <div class="item-description">в разработке</div>
+                </div>
+                
+                <div class="draggable-item" data-type="text" data-text="">
+                    <img src="" alt="" class="item-image">
+                    <div class="item-label"></div>
+                    <div class="item-description">в разработке</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bottom-section">
+        <div class="bottom-table-container">
+            <div class="table-content">
+                <div class="size-controls">
+                    
+                    <div class="control-group">
+                        <label for="widthInput">Ширина (px):</label>
+                        <input type="number" id="widthInput" value="600" min="1" />
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="heightInput">Высота (px):</label>
+                        <input type="number" id="heightInput" value="400" min="1" />
+                    </div>
+                    
+                    <button type="button" class="change-size-btn" id="changeSizeBtn">Change image size</button>
+                </div>
+                
+                <div class="save-button-container">
+                    <button class="save-button" id="saveButton">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+<div>
+    <a href="image_generator.html">
+        <button type = "button">Открыть генератор картинок</button>
+    </a>
+    <h3> в разработке </h3>
+</div>
+
+</body>
+</html>
